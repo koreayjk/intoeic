@@ -751,12 +751,12 @@ function buildPart7UI(){
     ⚠️ AI 기능을 사용하려면 <b>마이페이지 → Gemini API 키 설정</b>이 필요합니다.<br>
     <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary);font-weight:700">API 키 발급받기 →</a>
   </div>`:''}
-  <div class="upload-zone" id="p7-zone" onclick="document.getElementById('p7-file').click()">
+  <label class="upload-zone" id="p7-zone" for="p7-file">
     <div class="uz-icon">📸</div>
     <div class="uz-title">교재 페이지 사진 촬영</div>
     <div class="uz-sub">토익 지문을 찍으면 AI가 어려운 단어를<br>빈출도와 함께 자동 추출해드려요</div>
     <input type="file" id="p7-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="onP7ImgSelect(event)">
-  </div>
+  </label>
   <div id="p7-preview-wrap" style="display:none"></div>
   <button class="analyze-btn" id="p7-analyze-btn" style="display:none" onclick="analyzeP7()">
     <span>🔍 AI 단어 추출 시작</span>
@@ -824,7 +824,7 @@ async function analyzeP7(){
 - 최대 15개 단어
 - meanings는 토익에서 자주 쓰이는 뜻 순서로 최대 3개`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_geminiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -923,12 +923,12 @@ function buildPart56UI(){
   ${!geminiSet?`<div style="margin:10px 16px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:12px;padding:12px 14px;font-size:12px;color:#A07000;line-height:1.6">
     ⚠️ AI 기능을 사용하려면 <b>마이페이지 → Gemini API 키 설정</b>이 필요합니다.
   </div>`:''}
-  <div class="upload-zone" id="p56-zone" onclick="document.getElementById('p56-file').click()">
+  <label class="upload-zone" id="p56-zone" for="p56-file">
     <div class="uz-icon">📷</div>
     <div class="uz-title">Part 5/6 문제 사진 촬영</div>
     <div class="uz-sub">빈칸 문제를 찍으면 AI가 문제를 분석하고<br>오답 함정까지 상세히 설명해드려요</div>
     <input type="file" id="p56-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="onP56ImgSelect(event)">
-  </div>
+  </label>
   <div id="p56-preview-wrap" style="display:none"></div>
   <button class="analyze-btn accent" id="p56-extract-btn" style="display:none" onclick="extractP56()">
     <span>🤖 문제 추출하기</span>
@@ -991,7 +991,7 @@ async function extractP56(){
 
 만약 이미지에서 선택지가 보이지 않으면 choices를 빈 배열로.`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{inlineData:{mimeType:mime,data:b64}},{text:prompt}]}],
@@ -1082,7 +1082,7 @@ async function analyzeP56Answer(isCorrect){
   "similar_pattern": "비슷한 유형의 토익 출제 패턴 설명 (1-2문장, 한국어)"
 }`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
@@ -1444,7 +1444,7 @@ ${originalQ}
   "correct_reason": "정답 이유 한 문장 (한국어)"
 }`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
