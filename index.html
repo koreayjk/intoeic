@@ -824,7 +824,7 @@ async function analyzeP7(){
 - 최대 15개 단어
 - meanings는 토익에서 자주 쓰이는 뜻 순서로 최대 3개`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${_geminiKey}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -991,7 +991,7 @@ async function extractP56(){
 
 만약 이미지에서 선택지가 보이지 않으면 choices를 빈 배열로.`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{inlineData:{mimeType:mime,data:b64}},{text:prompt}]}],
@@ -1082,7 +1082,7 @@ async function analyzeP56Answer(isCorrect){
   "similar_pattern": "비슷한 유형의 토익 출제 패턴 설명 (1-2문장, 한국어)"
 }`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
@@ -1444,7 +1444,7 @@ ${originalQ}
   "correct_reason": "정답 이유 한 문장 (한국어)"
 }`;
 
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_geminiKey}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${_geminiKey}`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
