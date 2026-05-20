@@ -995,7 +995,7 @@ async function extractP56(){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{inlineData:{mimeType:mime,data:b64}},{text:prompt}]}],
-        generationConfig:{temperature:0.05,maxOutputTokens:1000}
+        generationConfig:{temperature:0.05,maxOutputTokens:1500}
       })
     });
     const data=await res.json();
@@ -1027,16 +1027,22 @@ function renderP56Question(qdata){
       </button>`).join('')}
     </div>`;
   document.getElementById('p56-question-wrap').style.display='block';
-  document.getElementById('p56-confirm-btn').disabled=true;
+  // innerHTML 렌더 후 다음 프레임에서 버튼 찾기
+  setTimeout(()=>{
+    const confirmBtn=document.getElementById('p56-confirm-btn');
+    if(confirmBtn) confirmBtn.disabled=true;
+  },0);
 }
 
 function selectP56(idx){
   if(_p56State.answered)return;
   _p56State.selected=idx;
-  document.querySelectorAll('.p56-choice').forEach((c,i)=>{
+  // p56-q-display 내부의 버튼만 선택 (rs-choices와 혼용 방지)
+  document.querySelectorAll('#p56-choice-list .p56-choice').forEach((c,i)=>{
     c.classList.toggle('selected',i===idx);
   });
-  document.getElementById('p56-confirm-btn').disabled=false;
+  const confirmBtn=document.getElementById('p56-confirm-btn');
+  if(confirmBtn) confirmBtn.disabled=false;
 }
 
 async function confirmP56Answer(){
@@ -1086,14 +1092,28 @@ async function analyzeP56Answer(isCorrect){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.2,maxOutputTokens:1200}
+        generationConfig:{temperature:0.2,maxOutputTokens:2500}
       })
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error.message);
     const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
     const cleaned=text.replace(/```json|```/g,'').trim();
-    const analysis=JSON.parse(cleaned);
+    let analysis;
+    try{
+      analysis=JSON.parse(cleaned);
+    }catch(e){
+      // JSON이 끊긴 경우 닫는 괄호 추가 후 재시도
+      try{ analysis=JSON.parse(cleaned+'}'); }
+      catch(e2){
+        // 그래도 안되면 텍스트에서 직접 추출
+        analysis={
+          grammar_category:'문법',
+          correct_reason:text.substring(0,300),
+          wrong_reason:'',trap_explanation:'',avoid_trap:'',study_tip:'',similar_pattern:''
+        };
+      }
+    }
     renderP56Analysis(isCorrect,analysis);
     // Auto-save to wrong note if incorrect
     if(!isCorrect){
@@ -1448,7 +1468,7 @@ ${originalQ}
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.7,maxOutputTokens:600}
+        generationConfig:{temperature:0.7,maxOutputTokens:1000}
       })
     });
     const data=await res.json();
