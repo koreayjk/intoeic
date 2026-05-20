@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INTO TOEIC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#F6F4EF;--bg2:#EDEBE4;--bg3:#E2DED6;
+  --card:#FFFFFF;--card2:#FAFAF8;
+  --primary:#1A3A5C;--primary-light:#2756A0;
+  --accent:#E85D26;--accent2:#F0A500;
+  --correct:#16A34A;--wrong:#DC2626;
+  --text:#18181B;--text2:#52525B;--text3:#A1A1AA;
+  --border:rgba(26,58,92,0.1);
+  --shadow:0 2px 12px rgba(26,58,92,0.07);
+  --shadow-lg:0 8px 32px rgba(26,58,92,0.13);
+  --r:16px;--r-sm:10px;
+  --font-d:'DM Serif Display',serif;
+  --font-b:'Pretendard',sans-serif;
+  --tab-h:64px;
+}
+body.dark{
+  --bg:#0D1B2A;--bg2:#122233;--bg3:#1A2F42;
+  --card:#162435;--card2:#1E3045;
+  --primary:#5B9BD5;--primary-light:#7AB3E0;
+  --accent:#FF7043;--accent2:#FFB800;
+  --correct:#22C55E;--wrong:#EF4444;
+  --text:#EDF2F7;--text2:#94A3B8;--text3:#4A6278;
+  --border:rgba(91,155,213,0.13);
+  --shadow:0 2px 12px rgba(0,0,0,0.3);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.45);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;background:var(--bg)}
+.scr{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.scr.active{display:flex}
+
+/* ─── LOADING ─── */
+#loading{position:fixed;inset:0;background:var(--primary);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .4s}
+#loading.out{opacity:0;pointer-events:none}
+.ld-brand{font-family:var(--font-d);font-size:46px;color:#fff;letter-spacing:-2px}
+.ld-brand span{color:var(--accent2)}
+.ld-dots{display:flex;gap:7px}
+.ld-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.35);animation:dp 1.2s ease-in-out infinite}
+.ld-dot:nth-child(2){animation-delay:.2s}.ld-dot:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* ─── LOGIN ─── */
+#scr-login{background:var(--primary);justify-content:center;align-items:center;padding:40px 28px;min-height:100dvh}
+.lg-logo{text-align:center;margin-bottom:44px}
+.lg-brand{font-family:var(--font-d);font-size:44px;color:#fff;letter-spacing:-1.5px;line-height:1}
+.lg-brand span{color:var(--accent2)}
+.lg-sub{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.lg-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:30px 26px;width:100%}
+.lg-tabs{display:flex;gap:4px;background:rgba(0,0,0,.2);border-radius:10px;padding:4px;margin-bottom:26px}
+.lg-tab{flex:1;padding:8px;border:none;background:transparent;color:rgba(255,255,255,.45);font-family:var(--font-b);font-size:14px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s}
+.lg-tab.on{background:rgba(255,255,255,.15);color:#fff}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;color:rgba(255,255,255,.55);letter-spacing:.5px;margin-bottom:5px;font-weight:600}
+.fg input{width:100%;padding:12px 14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-family:var(--font-b);font-size:15px;outline:none;transition:border-color .2s}
+.fg input::placeholder{color:rgba(255,255,255,.28)}
+.fg input:focus{border-color:var(--accent2)}
+.lg-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-family:var(--font-b);font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .2s}
+.lg-btn:active{opacity:.85}
+.lg-msg{text-align:center;font-size:12px;color:rgba(255,255,255,.45);margin-top:14px;min-height:16px}
+.lg-msg.err{color:#FF6B6B}.lg-msg.ok{color:#6EE7B7}
+
+/* ─── TOPBAR ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
+.topbar-title{font-family:var(--font-d);font-size:21px;color:var(--primary);letter-spacing:-.5px}
+.topbar-title span{color:var(--accent)}
+.ib{width:35px;height:35px;border:none;background:var(--bg2);border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .2s;color:var(--text)}
+.ib:active{background:var(--bg3)}
+
+/* ─── TAB BAR ─── */
+#tab-bar{display:none;height:var(--tab-h);background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+#tab-bar.on{display:flex}
+.ti{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;padding:6px 0;color:var(--text3);font-family:var(--font-b);transition:all .2s}
+.ti.on{color:var(--primary)}
+.ti-icon{font-size:21px;line-height:1;transition:transform .2s}
+.ti.on .ti-icon{transform:translateY(-1px)}
+.ti-label{font-size:8px;font-weight:700;letter-spacing:.2px;text-transform:uppercase}
+
+
+/* ─── 약점 분석 ─── */
+.weak-chart-wrap{padding:0 16px 8px}
+.weak-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.weak-bar-label{font-size:12px;font-weight:700;color:var(--text);width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.weak-bar-track{flex:1;height:10px;background:var(--bg3);border-radius:5px;overflow:hidden}
+.weak-bar-fill{height:100%;border-radius:5px;transition:width .8s ease}
+.weak-bar-pct{font-size:11px;font-weight:700;color:var(--text2);width:34px;text-align:right;flex-shrink:0}
+.weak-focus-box{margin:0 16px 14px;background:linear-gradient(135deg,rgba(232,93,38,.08),rgba(240,165,0,.06));border:1px solid rgba(232,93,38,.2);border-radius:var(--r);padding:14px 16px}
+.wfb-title{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.wfb-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;color:var(--text)}
+.wfb-item:last-child{margin-bottom:0}
+.wfb-rank{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* ─── 유사문제 생성 로딩 ─── */
+.similar-loading{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px}
+.similar-loading-txt{font-size:13px;color:var(--text3);text-align:center;line-height:1.6}
+.similar-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(26,58,92,.08);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--primary);margin-bottom:8px}
+body.dark .similar-badge{background:rgba(91,155,213,.1)}
+
+/* ─── SECTION CHIPS ─── */
+.part-chips{display:flex;gap:8px;padding:14px 16px 10px;overflow-x:auto;flex-shrink:0}
+.part-chips::-webkit-scrollbar{display:none}
+.pc{flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--text2);transition:all .2s;font-family:var(--font-b)}
+.pc.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.pc.p5.on{background:var(--accent);border-color:var(--accent)}
+.pc.p6.on{background:var(--accent2);border-color:var(--accent2);color:var(--text)}
+.pc.p7.on{background:var(--correct);border-color:var(--correct)}
+
+/* ─── HOME ─── */
+#scr-home{padding-bottom:12px}
+.home-hero{background:linear-gradient(135deg,var(--primary) 0%,#0F2A45 100%);padding:26px 22px 28px;margin:12px 14px 0;border-radius:20px;overflow:hidden;position:relative}
+.home-hero::after{content:'TOEIC';position:absolute;right:-8px;bottom:-16px;font-family:var(--font-d);font-size:80px;color:rgba(255,255,255,.04);letter-spacing:-3px;user-select:none;pointer-events:none}
+.h-greet{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:3px}
+.h-name{font-family:var(--font-d);font-size:24px;color:#fff;margin-bottom:18px}
+.h-name span{color:var(--accent2)}
+.h-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.h-stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 8px;text-align:center}
+.h-stat-n{font-family:var(--font-d);font-size:24px;color:var(--accent2);line-height:1;margin-bottom:3px}
+.h-stat-l{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.5px}
+.h-sec{padding:16px 16px 0}
+.h-sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.h-sec-t{font-size:14px;font-weight:700;color:var(--text)}
+.h-sec-more{font-size:12px;color:var(--primary);font-weight:600;background:none;border:none;cursor:pointer;font-family:var(--font-b)}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 14px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:7px}
+.qc:active{transform:scale(.97)}
+.qc-ic{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.qc-ic.blue{background:rgba(26,58,92,.1)}.qc-ic.ora{background:rgba(232,93,38,.1)}.qc-ic.yel{background:rgba(240,165,0,.1)}.qc-ic.grn{background:rgba(22,163,74,.1)}
+.qc-t{font-size:13px;font-weight:700;color:var(--text)}
+.qc-s{font-size:11px;color:var(--text3)}
+.review-banner{background:linear-gradient(135deg,var(--accent) 0%,#C73D10 100%);border-radius:var(--r);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:var(--shadow);margin:14px 16px 0;transition:opacity .2s}
+.review-banner:active{opacity:.9}
+.rb-badge{display:inline-block;background:rgba(255,255,255,.25);padding:3px 9px;border-radius:20px;font-size:9px;color:#fff;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
+.rb-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:1px}
+.rb-sub{font-size:11px;color:rgba(255,255,255,.7)}
+.rb-arrow{font-size:24px;color:rgba(255,255,255,.55)}
+
+/* ─── UPLOAD ZONE ─── */
+.upload-zone{margin:12px 16px;background:var(--card);border:2px dashed var(--border);border-radius:var(--r);padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.upload-zone:active{background:var(--bg2)}
+.upload-zone.drag{border-color:var(--primary);background:rgba(26,58,92,.04)}
+.uz-icon{font-size:36px}
+.uz-title{font-size:14px;font-weight:700;color:var(--text)}
+.uz-sub{font-size:12px;color:var(--text3);text-align:center;line-height:1.5}
+#file-inp{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* ─── PREVIEW ─── */
+.img-preview-wrap{margin:0 16px 12px;position:relative;border-radius:var(--r);overflow:hidden}
+.img-preview-wrap img{width:100%;max-height:260px;object-fit:contain;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border)}
+.img-preview-close{position:absolute;top:10px;right:10px;width:30px;height:30px;background:rgba(0,0,0,.55);border:none;border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* ─── AI ANALYZE BTN ─── */
+.analyze-btn{margin:0 16px 12px;width:calc(100% - 32px);padding:15px;background:var(--primary);border:none;border-radius:14px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s}
+.analyze-btn:active{opacity:.85}
+.analyze-btn:disabled{opacity:.55;cursor:not-allowed}
+.analyze-btn.accent{background:var(--accent)}
+
+/* ─── AI RESULT CARD ─── */
+.ai-result{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.air-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.air-icon{font-size:18px}
+.air-title{font-size:14px;font-weight:700;color:var(--text)}
+.air-body{padding:14px 16px}
+
+/* ─── PART 7: WORD CARDS ─── */
+.p7-word-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
+.p7-word{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 14px;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.p7-word:active{transform:scale(.98)}
+.p7-word-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.p7-en{font-size:18px;font-weight:800;color:var(--primary);letter-spacing:-.4px;flex:1}
+body.dark .p7-en{color:var(--primary)}
+.p7-part{font-size:10px;background:var(--bg2);color:var(--text3);padding:2px 7px;border-radius:5px;font-weight:700;flex-shrink:0}
+.freq-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.freq-label{font-size:10px;color:var(--text3);font-weight:700;width:36px;flex-shrink:0}
+.freq-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.freq-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.freq-pct{font-size:10px;font-weight:700;color:var(--text2);width:32px;text-align:right;flex-shrink:0}
+.lv-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;margin-bottom:8px}
+.lv-H{background:rgba(232,93,38,.12);color:var(--accent)}
+.lv-M{background:rgba(240,165,0,.12);color:#C47E00}
+.lv-L{background:rgba(22,163,74,.12);color:var(--correct)}
+.p7-meanings{display:flex;flex-direction:column;gap:3px}
+.p7-meaning-row{display:flex;gap:6px;font-size:13px}
+.p7-meaning-num{color:var(--text3);font-weight:700;min-width:16px}
+.p7-meaning-txt{color:var(--text2);flex:1}
+.p7-meaning-ctx{font-size:10px;color:var(--primary);font-weight:600;background:rgba(26,58,92,.08);padding:1px 6px;border-radius:4px;align-self:flex-start;white-space:nowrap}
+.p7-example{background:var(--bg2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.6;display:none}
+.p7-word.expanded .p7-example{display:block}
+.p7-add-btn{margin-top:10px;display:none}
+.p7-word.expanded .p7-add-btn{display:flex;gap:8px}
+.p7-btn-sm{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:700;font-family:var(--font-b);cursor:pointer;border:none;transition:all .15s}
+.p7-btn-sm:active{transform:scale(.97)}
+.p7-btn-know{background:rgba(22,163,74,.1);color:var(--correct)}
+.p7-btn-learn{background:var(--primary);color:#fff}
+
+/* ─── PART 5/6: QUESTION ─── */
+.p56-question{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.p56-q-img{width:100%;border-radius:10px;margin-bottom:12px;border:1px solid var(--border)}
+.p56-choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.p56-choice{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border:2px solid var(--border);border-radius:12px;cursor:pointer;background:var(--card2);transition:all .15s;font-family:var(--font-b)}
+.p56-choice:active:not(:disabled){transform:scale(.98)}
+.p56-choice-letter{width:26px;height:26px;border-radius:7px;background:var(--bg2);color:var(--text3);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.p56-choice-text{font-size:14px;color:var(--text);line-height:1.4;flex:1}
+.p56-choice.selected{border-color:var(--primary);background:rgba(26,58,92,.05)}
+.p56-choice.selected .p56-choice-letter{background:var(--primary);color:#fff}
+.p56-choice.correct{border-color:var(--correct);background:rgba(22,163,74,.06)}
+.p56-choice.correct .p56-choice-letter{background:var(--correct);color:#fff}
+.p56-choice.wrong{border-color:var(--wrong);background:rgba(220,38,38,.06)}
+.p56-choice.wrong .p56-choice-letter{background:var(--wrong);color:#fff}
+.p56-choice:disabled{cursor:default}
+.confirm-btn{margin:0 16px 10px;width:calc(100% - 32px);padding:14px;background:var(--primary);border:none;border-radius:13px;color:#fff;font-family:var(--font-b);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.confirm-btn:active{opacity:.85}
+.confirm-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ─── ANALYSIS RESULT ─── */
+.analysis-result{margin:0 16px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.ar-verdict{padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.ar-verdict-icon{font-size:32px}
+.ar-verdict-title{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.ar-verdict-title.ok{color:var(--correct)}.ar-verdict-title.ng{color:var(--wrong)}
+.ar-verdict-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.ar-section{padding:14px 18px;border-bottom:1px solid var(--border)}
+.ar-section:last-child{border-bottom:none}
+.ar-sec-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.ar-sec-body{font-size:14px;color:var(--text2);line-height:1.7}
+.ar-highlight{display:inline-block;background:rgba(240,165,0,.15);color:#A07000;padding:1px 6px;border-radius:4px;font-weight:700}
+body.dark .ar-highlight{background:rgba(240,165,0,.12);color:var(--accent2)}
+.ar-trap-box{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.7}
+.ar-study-box{background:rgba(26,58,92,.06);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.7}
+body.dark .ar-trap-box{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.18)}
+body.dark .ar-study-box{background:rgba(91,155,213,.07)}
+.ar-add-wrong{margin:0 16px 12px;display:flex;gap:8px}
+.ar-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;font-family:var(--font-b);cursor:pointer;border:none;transition:all .15s}
+.ar-btn:active{transform:scale(.97)}
+.ar-btn-save{background:rgba(220,38,38,.1);color:var(--wrong)}
+.ar-btn-next{background:var(--primary);color:#fff}
+.ar-btn-full{flex:2;background:var(--primary);color:#fff}
+
+/* ─── WRONG NOTE ─── */
+#scr-wrong{padding-bottom:12px}
+.wn-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 16px}
+.wn-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 8px;text-align:center;box-shadow:var(--shadow)}
+.wn-stat-n{font-family:var(--font-d);font-size:22px;color:var(--wrong)}
+.wn-stat-l{font-size:9px;color:var(--text3);margin-top:2px}
+.wn-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 30px;text-align:center}
+.wn-empty-icon{font-size:52px}
+.wn-empty-t{font-size:17px;font-weight:700;color:var(--text)}
+.wn-empty-s{font-size:13px;color:var(--text3)}
+.batch-wrap{padding:0 16px 12px}
+.batch-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.bc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.bc-title{font-size:14px;font-weight:700;color:var(--text)}
+.bc-due{font-size:11px;padding:3px 9px;border-radius:5px;font-weight:700}
+.bc-due.now{background:rgba(232,93,38,.12);color:var(--accent)}
+.bc-due.later{background:var(--bg2);color:var(--text3)}
+.bc-due.done{background:rgba(22,163,74,.1);color:var(--correct)}
+.bc-preview{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.bc-tag{font-size:11px;background:var(--bg2);color:var(--text3);padding:2px 8px;border-radius:5px;font-weight:600;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bc-tag.wrong-t{background:rgba(220,38,38,.1);color:var(--wrong)}
+.bc-actions{display:flex;gap:8px}
+.bc-btn{flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;font-family:var(--font-b);cursor:pointer;border:none;transition:all .15s}
+.bc-btn:active{transform:scale(.97)}
+.bc-btn-review{background:var(--primary);color:#fff}
+.bc-btn-skip{background:var(--bg2);color:var(--text2)}
+.bc-progress{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.bc-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .4s}
+.bc-count{font-size:11px;color:var(--text3);margin-bottom:8px}
+
+/* ─── REVIEW SESSION (오답 재풀기) ─── */
+#scr-review-session{display:none;flex-direction:column;position:fixed;inset:0;z-index:50;background:var(--bg)}
+#scr-review-session.active{display:flex}
+.rs-header{display:flex;align-items:center;gap:12px;padding:14px 18px 10px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
+.rs-close{background:var(--bg2);border:none;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:17px;color:var(--text);display:flex;align-items:center;justify-content:center}
+.rs-prog-wrap{flex:1}
+.rs-prog-info{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px;font-weight:600}
+.rs-prog-bar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.rs-prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .3s}
+.rs-body{flex:1;overflow-y:auto;padding:16px 16px 20px;display:flex;flex-direction:column;gap:12px}
+.rs-q-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.rs-q-num{font-size:11px;color:var(--text3);font-weight:700;margin-bottom:8px;letter-spacing:.5px}
+.rs-q-text{font-size:15px;color:var(--text);line-height:1.7;margin-bottom:12px;white-space:pre-wrap}
+.rs-q-choices{display:flex;flex-direction:column;gap:7px}
+.rs-complete{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;gap:14px}
+.rs-complete.active{display:flex}
+.rsc-emoji{font-size:58px}
+.rsc-title{font-family:var(--font-d);font-size:30px;color:var(--primary);letter-spacing:-1px}
+.rsc-score{font-size:44px;font-weight:900;color:var(--accent)}
+.rsc-sub{font-size:14px;color:var(--text2)}
+.rsc-btns{display:flex;gap:10px;width:100%}
+.rsc-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;font-family:var(--font-b);cursor:pointer;border:none}
+.rsc-btn-retry{background:var(--bg2);color:var(--text)}
+.rsc-btn-done{background:var(--primary);color:#fff}
+
+/* ─── PROFILE ─── */
+#scr-profile{padding-bottom:12px}
+.prof-hero{background:var(--primary);padding:28px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px}
+.prof-av{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:3px}
+.prof-name{font-family:var(--font-d);font-size:21px;color:#fff;letter-spacing:-.5px}
+.prof-email{font-size:12px;color:rgba(255,255,255,.45)}
+.prof-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin:14px 14px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.prof-card{background:var(--card);padding:14px 6px;text-align:center}
+.prof-card-n{font-family:var(--font-d);font-size:22px;color:var(--primary)}
+.prof-card-l{font-size:9px;color:var(--text3);margin-top:2px}
+.menu-list{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.mi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow);transition:all .15s}
+.mi:active{transform:scale(.98)}
+.mi-ic{width:34px;height:34px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.mi-t{font-size:13px;font-weight:600;color:var(--text);flex:1}
+.mi-s{font-size:11px;color:var(--text3);flex:1}
+.mi-arr{color:var(--text3);font-size:15px}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:calc(var(--tab-h) + 14px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:18px;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;transition:all .22s;z-index:200;pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── SPINNING ─── */
+.spin{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ─── SECTION LABEL ─── */
+.sec-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:10px 16px 4px}
+.count-bar{padding:4px 16px 6px;font-size:11px;color:var(--text3)}
+
+@media(min-width:480px){
+  #app{box-shadow:0 0 60px rgba(0,0,0,.15)}
+  #loading{max-width:480px;left:50%;transform:translateX(-50%);right:auto}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="ld-brand">INTO <span>TOEIC</span></div>
+  <div class="ld-dots"><div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div></div>
+</div>
+
+<div id="app">
+
+<!-- ── LOGIN ── -->
+<div id="scr-login" class="scr">
+  <div class="lg-logo">
+    <div class="lg-brand">INTO <span>TOEIC</span></div>
+    <div class="lg-sub">INTO유학CENTER</div>
+  </div>
+  <div class="lg-card">
+    <div class="lg-tabs">
+      <button class="lg-tab on" onclick="switchLgTab('in')">로그인</button>
+      <button class="lg-tab" onclick="switchLgTab('up')">회원가입</button>
+    </div>
+    <div class="fg"><label>이메일</label><input type="email" id="i-email" placeholder="이메일 주소"></div>
+    <div class="fg"><label>비밀번호</label><input type="password" id="i-pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <div class="fg" id="i-name-wrap" style="display:none"><label>이름</label><input type="text" id="i-name" placeholder="이름"></div>
+    <button class="lg-btn" id="auth-btn" onclick="doAuth()">로그인</button>
+    <div class="lg-msg" id="lg-msg"></div>
+  </div>
+</div>
+
+<!-- ── HOME ── -->
+<div id="scr-home" class="scr">
+  <div class="topbar">
+    <div class="topbar-title">INTO <span>TOEIC</span></div>
+    <div style="display:flex;gap:7px"><button class="ib" onclick="toggleDark()" id="dark-btn">🌙</button></div>
+  </div>
+  <div id="rv-banner" class="review-banner" onclick="openReview()" style="display:none">
+    <div><div class="rb-badge">🔥 TODAY</div><div class="rb-title">오늘 복습 예정 문제가 있어요!</div><div class="rb-sub" id="rv-cnt-text"></div></div>
+    <div class="rb-arrow">›</div>
+  </div>
+  <div class="home-hero">
+    <div class="h-greet">안녕하세요 👋</div>
+    <div class="h-name" id="h-name">학습자 <span>님</span></div>
+    <div class="h-stats">
+      <div class="h-stat"><div class="h-stat-n" id="s-words">0</div><div class="h-stat-l">학습 단어</div></div>
+      <div class="h-stat"><div class="h-stat-n" id="s-qs">0</div><div class="h-stat-l">풀이 문제</div></div>
+      <div class="h-stat"><div class="h-stat-n" id="s-wrong">0</div><div class="h-stat-l">오답 문제</div></div>
+    </div>
+  </div>
+  <div class="h-sec">
+    <div class="h-sec-hd"><div class="h-sec-t">파트별 학습</div></div>
+    <div class="qg">
+      <div class="qc" onclick="switchTab('study');setPart(56)">
+        <div class="qc-ic blue">🔍</div>
+        <div class="qc-t">Part 5/6 문법</div>
+        <div class="qc-s">빈칸 문제 심층 분석</div>
+      </div>
+      <div class="qc" onclick="switchTab('study');setPart(7)">
+        <div class="qc-ic grn">📸</div>
+        <div class="qc-t">Part 7 단어</div>
+        <div class="qc-s">사진 → AI 단어 추출</div>
+      </div>
+      <div class="qc" onclick="switchTab('wrong')">
+        <div class="qc-ic ora">📝</div>
+        <div class="qc-t">오답노트</div>
+        <div class="qc-s" id="s-wrong-sub">0개 묶음 대기</div>
+      </div>
+      <div class="qc" onclick="openReview()">
+        <div class="qc-ic yel">🔄</div>
+        <div class="qc-t">복습 시작</div>
+        <div class="qc-s">에빙하우스 복습</div>
+      </div>
+    </div>
+  </div>
+  <!-- 약점 분석 미리보기 (오답 있을 때만) -->
+  <div id="home-weak-section" style="display:none">
+    <div class="h-sec" style="padding-bottom:14px">
+      <div class="h-sec-hd">
+        <div class="h-sec-t">📊 약점 분석</div>
+        <button class="h-sec-more" onclick="switchTab('review')">자세히 보기</button>
+      </div>
+      <div id="home-weak-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STUDY ── -->
+<div id="scr-study" class="scr">
+  <div class="topbar">
+    <button class="ib" onclick="switchTab('home')" style="margin-right:4px">←</button>
+    <div class="topbar-title" style="flex:1">학습</div>
+    <button class="ib" onclick="toggleDark()">🌙</button>
+  </div>
+  <div class="part-chips">
+    <div class="pc p5" onclick="setPart(56)">Part 5/6 문법</div>
+    <div class="pc p7" onclick="setPart(7)">Part 7 단어</div>
+  </div>
+  <div id="study-content"></div>
+</div>
+
+<!-- ── WRONG NOTE ── -->
+<div id="scr-wrong" class="scr">
+  <div class="topbar">
+    <button class="ib" onclick="switchTab('home')" style="margin-right:4px">←</button>
+    <div class="topbar-title" style="flex:1">오답노트</div>
+  </div>
+  <div id="wrong-content"></div>
+</div>
+
+<!-- ── REVIEW TAB ── -->
+<div id="scr-review" class="scr">
+  <div class="topbar">
+    <div class="topbar-title">복습</div>
+  </div>
+  <div id="review-tab-content"></div>
+</div>
+
+<!-- ── PROFILE ── -->
+<div id="scr-profile" class="scr">
+  <div class="topbar">
+    <button class="ib" onclick="switchTab('home')" style="margin-right:4px">←</button>
+    <div class="topbar-title" style="flex:1">마이페이지</div>
+  </div>
+  <div id="prof-content"></div>
+</div>
+
+<!-- ── TAB BAR ── -->
+<div id="tab-bar">
+  <button class="ti on" onclick="switchTab('home')" id="tab-home"><div class="ti-icon">🏠</div><div class="ti-label">홈</div></button>
+  <button class="ti" onclick="switchTab('study')" id="tab-study"><div class="ti-icon">📖</div><div class="ti-label">학습</div></button>
+  <button class="ti" onclick="switchTab('wrong')" id="tab-wrong"><div class="ti-icon">📝</div><div class="ti-label">오답</div></button>
+  <button class="ti" onclick="switchTab('review')" id="tab-review"><div class="ti-icon">🔄</div><div class="ti-label">복습</div></button>
+  <button class="ti" onclick="switchTab('profile')" id="tab-profile"><div class="ti-icon">👤</div><div class="ti-label">MY</div></button>
+</div>
+</div><!-- #app -->
+
+<!-- ── REVIEW SESSION (오답 재풀기 전체화면) ── -->
+<div id="scr-review-session">
+  <div class="rs-header">
+    <button class="rs-close" onclick="closeReviewSession()">✕</button>
+    <div class="rs-prog-wrap">
+      <div class="rs-prog-info"><span id="rs-prog-text">0 / 0</span><span id="rs-batch-label">오답 복습</span></div>
+      <div class="rs-prog-bar"><div class="rs-prog-fill" id="rs-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;display:flex;gap:6px;flex-shrink:0">
+      <span style="color:var(--correct)" id="rs-ok">O:0</span>
+      <span style="color:var(--wrong)" id="rs-ng">X:0</span>
+    </div>
+  </div>
+  <div class="rs-body" id="rs-body">
+    <div class="rs-q-card" id="rs-qcard"></div>
+    <div class="rs-q-choices" id="rs-choices" style="display:flex;flex-direction:column;gap:7px"></div>
+  </div>
+  <div class="rs-complete" id="rs-complete">
+    <div class="rsc-emoji" id="rsc-emoji">🎉</div>
+    <div class="rsc-title">복습 완료!</div>
+    <div class="rsc-score" id="rsc-score"></div>
+    <div class="rsc-sub" id="rsc-sub"></div>
+    <div class="rsc-btns">
+      <button class="rsc-btn rsc-btn-retry" onclick="retryReview()">다시풀기</button>
+      <button class="rsc-btn rsc-btn-done" onclick="closeReviewSession()">완료</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+const SB_URL = 'https://ziatqkjlafucqtwshhla.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppYXRxa2psYWZ1Y3F0d3NoaGxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzNTM1MDUsImV4cCI6MjA1ODkyOTUwNX0.ANpAFoiVEoFdTjGe5Q9Yzxv0o2PmYKHI-PRJJ7BhVkw';
+const AI_KEY = ''; // Gemini API key — set here or user sets in profile
+const { createClient } = supabase;
+const _sb = createClient(SB_URL, SB_KEY);
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let _user = null, _profile = null;
+let _currentTab = 'home';
+let _currentPart = 56;
+let _previewImg = null; // base64
+let _analyzing = false;
+let _p56State = { choices:[], selected:null, answered:false, qdata:null };
+let _myWords = {}; // wordId: {en,ko,level,added}
+let _wrongProblems = []; // [{id,type,img,choices,correct,analysis,added,next_review,review_count,batch}]
+let _batches = []; // groups of 10
+let _geminiKey = '';
+
+// Review session
+let _rsProblems = [], _rsIdx = 0, _rsOk = 0, _rsNg = 0, _rsBatchId = null;
+let _similarCache = {};
+
+// ══════════════════════════════════════════
+// DARK MODE
+// ══════════════════════════════════════════
+function initDark(){
+  if(localStorage.getItem('it.dark')==='1'){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='☀️'}
+}
+function toggleDark(){
+  const d=document.body.classList.toggle('dark');
+  document.getElementById('dark-btn').textContent=d?'☀️':'🌙';
+  localStorage.setItem('it.dark',d?'1':'0');
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+let _tt;
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('on');
+  clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),2200);
+}
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+let _lgMode='in';
+function switchLgTab(m){
+  _lgMode=m;
+  document.querySelectorAll('.lg-tab').forEach((t,i)=>t.classList.toggle('on',m==='in'?i===0:i===1));
+  document.getElementById('auth-btn').textContent=m==='in'?'로그인':'회원가입';
+  document.getElementById('i-name-wrap').style.display=m==='up'?'block':'none';
+  setLgMsg('');
+}
+function setLgMsg(m,t=''){
+  const el=document.getElementById('lg-msg');el.textContent=m;el.className='lg-msg'+(t?' '+t:'');
+}
+async function doAuth(){
+  const email=document.getElementById('i-email').value.trim();
+  const pw=document.getElementById('i-pw').value;
+  if(!email||!pw){setLgMsg('이메일과 비밀번호를 입력하세요.','err');return}
+  setLgMsg('처리 중...');
+  document.getElementById('auth-btn').disabled=true;
+  try{
+    if(_lgMode==='up'){
+      const name=document.getElementById('i-name').value.trim()||'학습자';
+      const {error}=await _sb.auth.signUp({email,password:pw,options:{data:{name}}});
+      if(error)throw error;
+      setLgMsg('확인 이메일을 보냈습니다. 이메일을 확인해주세요!','ok');
+    } else {
+      const {data,error}=await _sb.auth.signInWithPassword({email,password:pw});
+      if(error)throw error;
+      await onSignIn(data.user);
+    }
+  }catch(e){setLgMsg(e.message.includes('Invalid')?'이메일 또는 비밀번호가 틀렸습니다.':e.message,'err')}
+  document.getElementById('auth-btn').disabled=false;
+}
+async function onSignIn(user){
+  _user=user;_profile=user.user_metadata||{};
+  await loadData();
+  showApp();
+}
+async function signOut(){
+  await _sb.auth.signOut();_user=null;_wrongProblems=[];_myWords={};
+  document.getElementById('tab-bar').classList.remove('on');
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scr-login').classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// SUPABASE DATA
+// ══════════════════════════════════════════
+async function loadData(){
+  if(!_user)return;
+  // Load wrong problems
+  const{data:wp}=await _sb.from('toeic_wrong_problems').select('*').eq('user_id',_user.id).order('added_at',{ascending:false});
+  if(wp) _wrongProblems=wp.map(r=>({...r,choices:typeof r.choices==='string'?JSON.parse(r.choices):r.choices}));
+  // Load my words
+  const{data:mw}=await _sb.from('toeic_my_words').select('*').eq('user_id',_user.id);
+  if(mw)mw.forEach(w=>{_myWords[w.word_id]={en:w.en,ko:w.ko,level:w.level,added:w.added_at}});
+  // Load Gemini key
+  _geminiKey=_profile.gemini_key||localStorage.getItem('it.gemini')||'';
+  buildBatches();
+}
+async function saveWrongProblem(prob){
+  if(!_user||_user.id==='test-user-001')return;
+  const{error}=await _sb.from('toeic_wrong_problems').upsert({
+    id:prob.id,user_id:_user.id,type:prob.type,
+    choices:JSON.stringify(prob.choices||[]),correct:prob.correct,
+    question_text:prob.question_text||'',
+    analysis:JSON.stringify(prob.analysis||{}),
+    added_at:prob.added_at||new Date().toISOString(),
+    next_review:prob.next_review,review_count:prob.review_count||0,
+    batch:prob.batch||null
+  },{onConflict:'id'});
+  if(error)console.error(error);
+}
+async function saveMyWord(word){
+  if(!_user||_user.id==='test-user-001')return;
+  await _sb.from('toeic_my_words').upsert({
+    user_id:_user.id,word_id:word.id,en:word.en,ko:word.ko,level:word.level,added_at:new Date().toISOString()
+  },{onConflict:'user_id,word_id'});
+}
+async function updateReviewDate(probId,correct){
+  const intervals=[1,2,3,6,15,30,60];
+  const prob=_wrongProblems.find(p=>p.id===probId);
+  if(!prob)return;
+  prob.review_count=(prob.review_count||0)+(correct?1:0);
+  const days=intervals[Math.min(prob.review_count,intervals.length-1)];
+  prob.next_review=new Date(Date.now()+days*86400000).toISOString();
+  // 테스트 모드에서는 Supabase 스킵
+  if(!_user||_user.id==='test-user-001')return;
+  await _sb.from('toeic_wrong_problems').update({next_review:prob.next_review,review_count:prob.review_count}).eq('id',probId).eq('user_id',_user.id);
+}
+
+// ══════════════════════════════════════════
+// BATCH LOGIC (10개씩 묶기)
+// ══════════════════════════════════════════
+function buildBatches(){
+  _batches=[];
+  const sorted=[..._wrongProblems].sort((a,b)=>new Date(a.added_at)-new Date(b.added_at));
+  for(let i=0;i<sorted.length;i+=10){
+    const group=sorted.slice(i,i+10);
+    const dueNow=group.some(p=>{
+      if(!p.next_review)return true;
+      return new Date(p.next_review)<=new Date();
+    });
+    const allDone=group.every(p=>p.review_count>=7);
+    _batches.push({id:i/10,problems:group,dueNow,allDone,size:group.length});
+  }
+}
+function getDueBatches(){return _batches.filter(b=>b.dueNow&&!b.allDone)}
+
+// ══════════════════════════════════════════
+// APP NAV
+// ══════════════════════════════════════════
+function showApp(){
+  document.getElementById('scr-login').classList.remove('active');
+  document.getElementById('tab-bar').classList.add('on');
+  switchTab('home');
+}
+function switchTab(tab){
+  _currentTab=tab;
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'));
+  document.getElementById('scr-'+tab).classList.add('active');
+  const tabEl=document.getElementById('tab-'+tab);
+  if(tabEl)tabEl.classList.add('on');
+  if(tab==='home')renderHome();
+  if(tab==='study')renderStudy();
+  if(tab==='wrong')renderWrong();
+  if(tab==='review')renderReviewTab();
+  if(tab==='profile')renderProfile();
+}
+function setPart(p){
+  _currentPart=p;
+  document.querySelectorAll('.pc').forEach(c=>c.classList.remove('on'));
+  const partClass=String(p)==='56'?'p5':'p7';
+  const chipEl=document.querySelector(`.pc.${partClass}`);
+  if(chipEl)chipEl.classList.add('on');
+  renderStudy();
+}
+
+// ══════════════════════════════════════════
+// HOME
+// ══════════════════════════════════════════
+function renderHome(){
+  const name=_profile?.name||'학습자';
+  document.getElementById('h-name').innerHTML=`${name} <span>님</span>`;
+  document.getElementById('s-words').textContent=Object.keys(_myWords).length;
+  document.getElementById('s-qs').textContent=_wrongProblems.length;
+  document.getElementById('s-wrong').textContent=_wrongProblems.length;
+  const due=getDueBatches();
+  const banner=document.getElementById('rv-banner');
+  if(due.length>0){
+    banner.style.display='flex';
+    document.getElementById('rv-cnt-text').textContent=`${due.length}묶음 (${due.reduce((a,b)=>a+b.size,0)}문제) 복습 대기`;
+  }else{banner.style.display='none'}
+  document.getElementById('s-wrong-sub').textContent=`${_batches.length}개 묶음`;
+
+  // 약점 분석 미리보기
+  const weak=calcWeakness();
+  const weakSec=document.getElementById('home-weak-section');
+  if(weak.length>0){
+    weakSec.style.display='block';
+    const bars=document.getElementById('home-weak-bars');
+    const top3=weak.slice(0,3);
+    const maxVal=Math.max(...top3.map(w=>w.wrong),1);
+    const colors=['var(--wrong)','var(--accent)','var(--accent2)'];
+    bars.innerHTML=top3.map((w,i)=>`
+    <div class="weak-bar-row" style="margin-bottom:8px">
+      <div class="weak-bar-label" style="font-size:11px">${w.cat}</div>
+      <div class="weak-bar-track"><div class="weak-bar-fill" style="width:${Math.round((w.wrong/maxVal)*100)}%;background:${colors[i]}"></div></div>
+      <div class="weak-bar-pct">${w.wrong}개</div>
+    </div>`).join('');
+  } else {
+    weakSec.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════
+// STUDY RENDER
+// ══════════════════════════════════════════
+function renderStudy(){
+  const c=document.getElementById('study-content');
+  document.querySelectorAll('.pc').forEach(x=>x.classList.remove('on'));
+  if(_currentPart===7){
+    document.querySelector('.pc.p7').classList.add('on');
+    c.innerHTML=buildPart7UI();
+  } else {
+    document.querySelector('.pc.p5').classList.add('on');
+    c.innerHTML=buildPart56UI();
+  }
+}
+
+// ── PART 7 UI ──
+function buildPart7UI(){
+  const geminiSet=!!_geminiKey;
+  return `
+  ${!geminiSet?`<div style="margin:10px 16px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:12px;padding:12px 14px;font-size:12px;color:#A07000;line-height:1.6">
+    ⚠️ AI 기능을 사용하려면 <b>마이페이지 → Gemini API 키 설정</b>이 필요합니다.<br>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary);font-weight:700">API 키 발급받기 →</a>
+  </div>`:''}
+  <div class="upload-zone" id="p7-zone" onclick="document.getElementById('p7-file').click()">
+    <div class="uz-icon">📸</div>
+    <div class="uz-title">교재 페이지 사진 촬영</div>
+    <div class="uz-sub">토익 지문을 찍으면 AI가 어려운 단어를<br>빈출도와 함께 자동 추출해드려요</div>
+    <input type="file" id="p7-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="onP7ImgSelect(event)">
+  </div>
+  <div id="p7-preview-wrap" style="display:none"></div>
+  <button class="analyze-btn" id="p7-analyze-btn" style="display:none" onclick="analyzeP7()">
+    <span>🔍 AI 단어 추출 시작</span>
+  </button>
+  <div id="p7-result"></div>`;
+}
+
+function onP7ImgSelect(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _previewImg=ev.target.result;
+    const pw=document.getElementById('p7-preview-wrap');
+    pw.style.display='block';
+    pw.innerHTML=`<div class="img-preview-wrap"><img src="${_previewImg}"><button class="img-preview-close" onclick="clearP7Preview()">✕</button></div>`;
+    document.getElementById('p7-analyze-btn').style.display='flex';
+  };
+  reader.readAsDataURL(file);
+}
+function clearP7Preview(){
+  _previewImg=null;
+  document.getElementById('p7-preview-wrap').innerHTML='';
+  document.getElementById('p7-preview-wrap').style.display='none';
+  document.getElementById('p7-analyze-btn').style.display='none';
+  document.getElementById('p7-result').innerHTML='';
+}
+
+async function analyzeP7(){
+  if(!_geminiKey){toast('마이페이지에서 Gemini API 키를 먼저 설정해주세요');return}
+  if(!_previewImg){toast('이미지를 먼저 선택하세요');return}
+  if(_analyzing)return;
+  _analyzing=true;
+  const btn=document.getElementById('p7-analyze-btn');
+  btn.innerHTML='<div class="spin"></div> AI 분석 중...';btn.disabled=true;
+  try{
+    const b64=_previewImg.split(',')[1];
+    const mime=_previewImg.split(';')[0].split(':')[1];
+    const prompt=`당신은 토익 전문 강사입니다. 이 이미지는 토익 지문 또는 교재 페이지입니다.
+
+이미지에서 토익 수험생이 모를 수 있는 어휘를 추출하여 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
+
+{
+  "words": [
+    {
+      "en": "단어(원형)",
+      "part": "품사(n/v/adj/adv/prep/conj)",
+      "level": "H 또는 M 또는 L (H=상급/어려움, M=중급, L=초급/기본)",
+      "toeic_freq": 숫자(0-100, 토익 빈출도 퍼센트),
+      "meanings": [
+        {"ko": "뜻1", "ctx": "토익 맥락(예: 비즈니스/물류/인사 등)"},
+        {"ko": "뜻2", "ctx": "맥락2"},
+        {"ko": "뜻3", "ctx": "맥락3"}
+      ],
+      "example_en": "토익 스타일 예문",
+      "example_ko": "예문 한국어 번역"
+    }
+  ]
+}
+
+규칙:
+- 상(H): 토익 700+ 점 수준 어휘
+- 중(M): 토익 500-700 점 수준
+- 하(L): 토익 500 이하 기본 어휘
+- 토익에서 중요하지 않은 단어는 제외
+- 최대 15개 단어
+- meanings는 토익에서 자주 쓰이는 뜻 순서로 최대 3개`;
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[
+          {inlineData:{mimeType:mime,data:b64}},
+          {text:prompt}
+        ]}],
+        generationConfig:{temperature:0.1,maxOutputTokens:3000}
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const cleaned=text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(cleaned);
+    renderP7Words(parsed.words||[]);
+  }catch(e){
+    document.getElementById('p7-result').innerHTML=`<div style="margin:0 16px;padding:14px;background:rgba(220,38,38,.08);border-radius:12px;font-size:13px;color:var(--wrong)">오류: ${e.message}</div>`;
+  }
+  _analyzing=false;
+  btn.innerHTML='<span>🔍 AI 단어 추출 시작</span>';btn.disabled=false;
+}
+
+function renderP7Words(words){
+  if(!words.length){document.getElementById('p7-result').innerHTML='<div class="wn-empty"><div class="wn-empty-icon">🔍</div><div class="wn-empty-t">추출된 단어가 없습니다</div></div>';return}
+  document.getElementById('p7-result').innerHTML=`
+  <div class="sec-label">추출된 단어 — ${words.length}개</div>
+  <div class="p7-word-list" id="p7-word-list">
+    ${words.map((w,i)=>{
+      const freqColor=w.toeic_freq>=80?'var(--accent)':w.toeic_freq>=50?'var(--accent2)':'var(--correct)';
+      const alreadyAdded=Object.values(_myWords).some(m=>m.en===w.en);
+      return `
+      <div class="p7-word ${alreadyAdded?'already':''}" id="pw-${i}" onclick="toggleP7Word(${i})">
+        <div class="p7-word-top">
+          <div class="p7-en">${w.en}</div>
+          <div class="p7-part">${w.part}</div>
+          <span class="lv-badge lv-${w.level}">${w.level==='H'?'상급':w.level==='M'?'중급':'초급'}</span>
+        </div>
+        <div class="freq-bar-wrap">
+          <div class="freq-label">빈출도</div>
+          <div class="freq-bar"><div class="freq-fill" style="width:${w.toeic_freq}%;background:${freqColor}"></div></div>
+          <div class="freq-pct">${w.toeic_freq}%</div>
+        </div>
+        <div class="p7-meanings">
+          ${(w.meanings||[]).map((m,mi)=>`
+          <div class="p7-meaning-row">
+            <span class="p7-meaning-num">${mi+1}</span>
+            <span class="p7-meaning-txt">${m.ko}</span>
+            ${m.ctx?`<span class="p7-meaning-ctx">${m.ctx}</span>`:''}
+          </div>`).join('')}
+        </div>
+        <div class="p7-example">
+          <div style="font-size:13px;color:var(--text);margin-bottom:3px">${w.example_en||''}</div>
+          <div style="font-size:12px;color:var(--text3)">${w.example_ko||''}</div>
+        </div>
+        <div class="p7-add-btn">
+          ${alreadyAdded
+            ?`<button class="p7-btn-sm p7-btn-know" style="background:var(--bg2);color:var(--text3);cursor:default">✓ 이미 추가됨</button>`
+            :`<button class="p7-btn-sm p7-btn-know" onclick="addWord(${i},'L',event)">✓ 알고 있어요</button>
+               <button class="p7-btn-sm p7-btn-learn" onclick="addWord(${i},'study',event)">+ 단어장에 추가</button>`
+          }
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  // Animate freq bars
+  setTimeout(()=>{
+    document.querySelectorAll('.freq-fill').forEach(f=>{
+      const w=f.style.width;f.style.width='0';
+      setTimeout(()=>f.style.width=w,50);
+    });
+  },100);
+  // Store words temporarily
+  window._p7Words=words;
+}
+function toggleP7Word(i){
+  const el=document.getElementById('pw-'+i);
+  el.classList.toggle('expanded');
+}
+async function addWord(idx,type,e){
+  e.stopPropagation();
+  const w=window._p7Words[idx];if(!w)return;
+  const id=`w_${w.en}_${Date.now()}`;
+  _myWords[id]={en:w.en,ko:(w.meanings||[]).map(m=>m.ko).join(', '),level:w.level,added:new Date().toISOString()};
+  await saveMyWord({id,en:w.en,ko:_myWords[id].ko,level:w.level});
+  toast(`"${w.en}" 단어장에 추가되었습니다 ✓`);
+  // Update button
+  const btns=document.querySelector(`#pw-${idx} .p7-add-btn`);
+  if(btns)btns.innerHTML=`<button class="p7-btn-sm p7-btn-know" style="background:var(--bg2);color:var(--text3);cursor:default">✓ 단어장 추가 완료</button>`;
+}
+
+// ── PART 5/6 UI ──
+function buildPart56UI(){
+  const geminiSet=!!_geminiKey;
+  let html=`
+  ${!geminiSet?`<div style="margin:10px 16px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:12px;padding:12px 14px;font-size:12px;color:#A07000;line-height:1.6">
+    ⚠️ AI 기능을 사용하려면 <b>마이페이지 → Gemini API 키 설정</b>이 필요합니다.
+  </div>`:''}
+  <div class="upload-zone" id="p56-zone" onclick="document.getElementById('p56-file').click()">
+    <div class="uz-icon">📷</div>
+    <div class="uz-title">Part 5/6 문제 사진 촬영</div>
+    <div class="uz-sub">빈칸 문제를 찍으면 AI가 문제를 분석하고<br>오답 함정까지 상세히 설명해드려요</div>
+    <input type="file" id="p56-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="onP56ImgSelect(event)">
+  </div>
+  <div id="p56-preview-wrap" style="display:none"></div>
+  <button class="analyze-btn accent" id="p56-extract-btn" style="display:none" onclick="extractP56()">
+    <span>🤖 문제 추출하기</span>
+  </button>
+  <div id="p56-question-wrap" style="display:none">
+    <div class="sec-label">문제 확인 후 답 선택</div>
+    <div class="p56-question" id="p56-q-display"></div>
+    <div style="display:flex;gap:8px;margin:0 16px 10px">
+      <button class="confirm-btn" id="p56-confirm-btn" onclick="confirmP56Answer()" disabled style="flex:1">정답 확인하기</button>
+    </div>
+  </div>
+  <div id="p56-analysis-wrap" style="display:none"></div>`;
+  return html;
+}
+
+function onP56ImgSelect(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    _previewImg=ev.target.result;
+    _p56State={choices:[],selected:null,answered:false,qdata:null};
+    const pw=document.getElementById('p56-preview-wrap');
+    pw.style.display='block';
+    pw.innerHTML=`<div class="img-preview-wrap"><img src="${_previewImg}"><button class="img-preview-close" onclick="clearP56Preview()">✕</button></div>`;
+    document.getElementById('p56-extract-btn').style.display='flex';
+    document.getElementById('p56-question-wrap').style.display='none';
+    document.getElementById('p56-analysis-wrap').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+function clearP56Preview(){
+  _previewImg=null;
+  document.getElementById('p56-preview-wrap').innerHTML='';
+  document.getElementById('p56-preview-wrap').style.display='none';
+  document.getElementById('p56-extract-btn').style.display='none';
+  document.getElementById('p56-question-wrap').style.display='none';
+  document.getElementById('p56-analysis-wrap').style.display='none';
+}
+
+async function extractP56(){
+  if(!_geminiKey){toast('마이페이지에서 Gemini API 키를 먼저 설정해주세요');return}
+  if(!_previewImg)return;
+  if(_analyzing)return;
+  _analyzing=true;
+  const btn=document.getElementById('p56-extract-btn');
+  btn.innerHTML='<div class="spin"></div> 문제 추출 중...';btn.disabled=true;
+  try{
+    const b64=_previewImg.split(',')[1];
+    const mime=_previewImg.split(';')[0].split(':')[1];
+    const prompt=`이 이미지는 토익 Part 5 또는 Part 6 빈칸 채우기 문제입니다.
+문제와 보기를 정확히 추출하여 다음 JSON 형식으로만 응답하세요:
+
+{
+  "part": "5 또는 6",
+  "question_text": "문제 전체 텍스트 (빈칸은 _____ 로 표시)",
+  "choices": ["(A) 선택지1", "(B) 선택지2", "(C) 선택지3", "(D) 선택지4"],
+  "correct_index": 정답 인덱스(0-3),
+  "grammar_point": "이 문제의 핵심 문법/어휘 포인트 (한국어, 20자 이내)"
+}
+
+만약 이미지에서 선택지가 보이지 않으면 choices를 빈 배열로.`;
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{inlineData:{mimeType:mime,data:b64}},{text:prompt}]}],
+        generationConfig:{temperature:0.05,maxOutputTokens:1000}
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const cleaned=text.replace(/```json|```/g,'').trim();
+    const qdata=JSON.parse(cleaned);
+    _p56State.qdata=qdata;
+    _p56State.choices=qdata.choices;
+    _p56State.correct=qdata.correct_index;
+    renderP56Question(qdata);
+  }catch(e){
+    toast('문제 추출 실패: '+e.message);
+  }
+  _analyzing=false;
+  btn.innerHTML='<span>🤖 문제 추출하기</span>';btn.disabled=false;
+}
+
+function renderP56Question(qdata){
+  const letters=['A','B','C','D'];
+  document.getElementById('p56-q-display').innerHTML=`
+    <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:10px">PART ${qdata.part} · ${qdata.grammar_point||''}</div>
+    <div style="font-size:15px;color:var(--text);line-height:1.8;margin-bottom:14px;white-space:pre-wrap">${qdata.question_text}</div>
+    <div class="p56-choices" id="p56-choice-list">
+      ${(qdata.choices||[]).map((ch,i)=>`
+      <button class="p56-choice" onclick="selectP56(${i})" id="p56-ch-${i}">
+        <span class="p56-choice-letter">${letters[i]}</span>
+        <span class="p56-choice-text">${ch}</span>
+      </button>`).join('')}
+    </div>`;
+  document.getElementById('p56-question-wrap').style.display='block';
+  document.getElementById('p56-confirm-btn').disabled=true;
+}
+
+function selectP56(idx){
+  if(_p56State.answered)return;
+  _p56State.selected=idx;
+  document.querySelectorAll('.p56-choice').forEach((c,i)=>{
+    c.classList.toggle('selected',i===idx);
+  });
+  document.getElementById('p56-confirm-btn').disabled=false;
+}
+
+async function confirmP56Answer(){
+  if(_p56State.selected===null||_p56State.answered)return;
+  _p56State.answered=true;
+  document.getElementById('p56-confirm-btn').disabled=true;
+  const isCorrect=_p56State.selected===_p56State.correct;
+  // Highlight choices
+  document.querySelectorAll('.p56-choice').forEach((c,i)=>{
+    c.disabled=true;
+    if(i===_p56State.correct)c.classList.add('correct');
+    else if(i===_p56State.selected&&!isCorrect)c.classList.add('wrong');
+  });
+  // Get analysis
+  await analyzeP56Answer(isCorrect);
+}
+
+async function analyzeP56Answer(isCorrect){
+  const wrap=document.getElementById('p56-analysis-wrap');
+  wrap.style.display='block';
+  wrap.innerHTML=`<div style="display:flex;justify-content:center;padding:20px"><div class="spin" style="width:28px;height:28px;border-width:3px;border-color:var(--border);border-top-color:var(--primary)"></div></div>`;
+  try{
+    const qdata=_p56State.qdata;
+    const letters=['A','B','C','D'];
+    const selectedChoice=qdata.choices[_p56State.selected];
+    const correctChoice=qdata.choices[_p56State.correct];
+    const prompt=`당신은 토익 전문 강사입니다. 다음 토익 Part ${qdata.part} 문제를 분석하세요.
+
+문제: ${qdata.question_text}
+선택지: ${qdata.choices.map((c,i)=>`(${letters[i]}) ${c}`).join(' / ')}
+정답: (${letters[_p56State.correct]}) ${correctChoice}
+수험생 선택: (${letters[_p56State.selected]}) ${selectedChoice}
+정답 여부: ${isCorrect?'정답':'오답'}
+
+다음 JSON 형식으로만 응답하세요:
+{
+  "grammar_category": "이 문제 유형 (예: 시제/품사/전치사/어휘/관계사 등, 20자 이내)",
+  "correct_reason": "정답인 이유를 문법적으로 상세히 설명 (2-3문장, 한국어)",
+  "wrong_reason": "${isCorrect?'N/A':'수험생이 이 오답을 선택한 의도/이유 분석 (2문장, 한국어)'}",
+  "trap_explanation": "이 문제에서 오답으로 유도하는 함정과 그 이유 (2-3문장, 한국어)",
+  "avoid_trap": "이런 함정에 넘어가지 않는 핵심 공부법 (2-3문장, 한국어)",
+  "study_tip": "이 유형 문제를 완벽히 마스터하기 위한 구체적 학습 전략 (2-3문장, 한국어)",
+  "similar_pattern": "비슷한 유형의 토익 출제 패턴 설명 (1-2문장, 한국어)"
+}`;
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:1200}
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const cleaned=text.replace(/```json|```/g,'').trim();
+    const analysis=JSON.parse(cleaned);
+    renderP56Analysis(isCorrect,analysis);
+    // Auto-save to wrong note if incorrect
+    if(!isCorrect){
+      await autoSaveWrong(analysis);
+    }
+  }catch(e){
+    wrap.innerHTML=`<div style="margin:0 16px;padding:14px;background:rgba(220,38,38,.08);border-radius:12px;font-size:13px;color:var(--wrong)">분석 오류: ${e.message}</div>`;
+  }
+}
+
+function renderP56Analysis(isCorrect,a){
+  const letters=['A','B','C','D'];
+  const qdata=_p56State.qdata;
+  _p56State.lastAnalysis=a; // 나중에 수동 저장 시 사용
+  const wrap=document.getElementById('p56-analysis-wrap');
+  wrap.innerHTML=`
+  <div class="analysis-result">
+    <div class="ar-verdict">
+      <div class="ar-verdict-icon">${isCorrect?'✅':'❌'}</div>
+      <div>
+        <div class="ar-verdict-title ${isCorrect?'ok':'ng'}">${isCorrect?'정답!':'오답'}</div>
+        <div class="ar-verdict-sub">${a.grammar_category} · 정답: (${letters[_p56State.correct]}) ${qdata.choices[_p56State.correct]}</div>
+      </div>
+    </div>
+    <div class="ar-section">
+      <div class="ar-sec-label">✅ 정답인 이유</div>
+      <div class="ar-sec-body">${a.correct_reason}</div>
+    </div>
+    ${!isCorrect?`
+    <div class="ar-section">
+      <div class="ar-sec-label">🤔 오답 선택 의도 분석</div>
+      <div class="ar-sec-body">${a.wrong_reason}</div>
+    </div>`:''}
+    <div class="ar-section">
+      <div class="ar-sec-label">🪤 오답 함정 분석</div>
+      <div class="ar-trap-box">${a.trap_explanation}</div>
+    </div>
+    <div class="ar-section">
+      <div class="ar-sec-label">🛡️ 함정에 안 넘어가는 법</div>
+      <div class="ar-sec-body">${a.avoid_trap}</div>
+    </div>
+    <div class="ar-section">
+      <div class="ar-sec-label">📚 공부 전략</div>
+      <div class="ar-study-box">${a.study_tip}</div>
+    </div>
+    <div class="ar-section">
+      <div class="ar-sec-label">🔁 유사 출제 패턴</div>
+      <div class="ar-sec-body">${a.similar_pattern}</div>
+    </div>
+  </div>
+  ${!isCorrect?`
+  <div class="ar-add-wrong">
+    <div style="flex:1;padding:12px 14px;background:rgba(220,38,38,.08);border-radius:12px;font-size:12px;color:var(--wrong);line-height:1.5">
+      📝 <b>오답노트에 자동 저장되었습니다</b><br>에빙하우스 스케줄로 자동 복습됩니다
+    </div>
+  </div>`:`
+  <div class="ar-add-wrong">
+    <button class="ar-btn ar-btn-save" onclick="manuallySaveWrong()">오답노트에 추가</button>
+    <button class="ar-btn ar-btn-full" onclick="clearP56Preview();renderStudy()">다음 문제</button>
+  </div>`}`;
+}
+
+async function autoSaveWrong(analysis){
+  const qdata=_p56State.qdata;
+  const prob={
+    id:`q_${Date.now()}`,
+    type:'p56',
+    img:null, // 사진 저장 안 함 (텍스트만 저장)
+    question_text:qdata.question_text,
+    choices:qdata.choices,
+    correct:_p56State.correct,
+    analysis:analysis,
+    added_at:new Date().toISOString(),
+    next_review:new Date(Date.now()+86400000).toISOString(), // 1일 후
+    review_count:0,
+    batch:Math.floor(_wrongProblems.length/10)
+  };
+  _wrongProblems.unshift(prob);
+  buildBatches();
+  await saveWrongProblem(prob);
+  toast('오답노트에 자동 저장되었습니다 📝');
+}
+
+async function manuallySaveWrong(){
+  await autoSaveWrong(_p56State.lastAnalysis||_p56State.qdata||{});
+  toast('오답노트에 저장되었습니다');
+}
+
+// ══════════════════════════════════════════
+// REVIEW TAB
+// ══════════════════════════════════════════
+// ── 약점 분석 계산 ──
+function calcWeakness(){
+  const map={};
+  _wrongProblems.forEach(p=>{
+    let a=p.analysis;
+    // Supabase에서 string으로 올 수 있어서 파싱
+    if(typeof a==='string'){try{a=JSON.parse(a)}catch(e){a={}}}
+    const cat=(a&&a.grammar_category)||'기타';
+    if(!map[cat])map[cat]={wrong:0,total:0};
+    map[cat].wrong++;map[cat].total++;
+  });
+  // 오답률 높은 순 정렬
+  return Object.entries(map)
+    .map(([cat,v])=>({cat,wrong:v.wrong,total:v.total,rate:Math.round((v.wrong/Math.max(v.total,1))*100)}))
+    .sort((a,b)=>b.wrong-a.wrong)
+    .slice(0,8);
+}
+
+function renderReviewTab(){
+  buildBatches();
+  const el=document.getElementById('review-tab-content');
+  const due=getDueBatches();
+  const allBatches=_batches;
+  const weak=calcWeakness();
+
+  if(allBatches.length===0&&weak.length===0){
+    el.innerHTML=`
+    <div class="wn-empty">
+      <div class="wn-empty-icon">🎉</div>
+      <div class="wn-empty-t">복습할 문제가 없어요!</div>
+      <div class="wn-empty-s">Part 5/6 문제를 풀면 자동으로 복습 일정이 생겨요</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=`
+  <div class="wn-stats">
+    <div class="wn-stat"><div class="wn-stat-n" style="color:var(--accent)">${due.length}</div><div class="wn-stat-l">지금 복습</div></div>
+    <div class="wn-stat"><div class="wn-stat-n">${allBatches.length}</div><div class="wn-stat-l">전체 묶음</div></div>
+    <div class="wn-stat"><div class="wn-stat-n">${_wrongProblems.length}</div><div class="wn-stat-l">총 문제</div></div>
+  </div>
+  ${due.length>0?`
+  <div style="padding:0 16px 10px">
+    <button style="width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:700;font-family:var(--font-b);cursor:pointer" onclick="startNextDue()">
+      🔥 지금 복습 시작 (${due.reduce((a,b)=>a+b.size,0)}문제)
+    </button>
+  </div>`:''}
+  ${weak.length>0?`
+  <div style="padding:4px 16px 6px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:4px">📊 나의 약점 유형 분석</div>
+  ${weak.slice(0,3).length>0?`
+  <div class="weak-focus-box">
+    <div class="wfb-title">🎯 집중 공부 추천</div>
+    ${weak.slice(0,3).map((w,i)=>`
+    <div class="wfb-item">
+      <div class="wfb-rank">${i+1}</div>
+      <div><b>${w.cat}</b> — ${w.wrong}문제 오답</div>
+    </div>`).join('')}
+  </div>`:''}
+  <div class="weak-chart-wrap">
+    ${weak.map(w=>{
+      const colors=['var(--wrong)','var(--accent)','var(--accent2)','var(--primary)','var(--correct)'];
+      const color=colors[Math.min(weak.indexOf(w),4)];
+      const barW=Math.min(100,Math.round((w.wrong/Math.max(...weak.map(x=>x.wrong),1))*100));
+      return `
+      <div class="weak-bar-row">
+        <div class="weak-bar-label">${w.cat}</div>
+        <div class="weak-bar-track"><div class="weak-bar-fill" style="width:${barW}%;background:${color}"></div></div>
+        <div class="weak-bar-pct">${w.wrong}개</div>
+      </div>`;
+    }).join('')}
+  </div>`:''}
+  <div style="padding:4px 16px 6px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase">에빙하우스 복습 스케줄</div>
+  <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
+    ${allBatches.map((b,i)=>{
+      const doneCount=b.problems.filter(p=>(p.review_count||0)>=1).length;
+      const pct=Math.round((doneCount/b.size)*100);
+      const dueLabel=b.allDone?'완료 ✓':b.dueNow?'지금 복습 🔥':'대기 중';
+      const dueClass=b.allDone?'done':b.dueNow?'now':'later';
+      const nextDate=b.problems.filter(p=>p.next_review).map(p=>new Date(p.next_review)).sort((a,c)=>a-c)[0];
+      const nextStr=nextDate&&!b.dueNow?`${nextDate.getMonth()+1}/${nextDate.getDate()} 복습 예정`:'';
+      return `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:14px;font-weight:700;color:var(--text)">묶음 ${i+1} <span style="font-size:12px;font-weight:400;color:var(--text3)">(${b.size}문제)</span></div>
+          <span class="bc-due ${dueClass}">${dueLabel}</span>
+        </div>
+        <div class="bc-progress"><div class="bc-progress-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin:4px 0 10px">${doneCount}/${b.size} 완료${nextStr?' · '+nextStr:''}</div>
+        <button style="width:100%;padding:10px;background:${b.dueNow?'var(--primary)':'var(--bg2)'};color:${b.dueNow?'#fff':'var(--text2)'};border:none;border-radius:9px;font-size:13px;font-weight:700;font-family:var(--font-b);cursor:pointer" onclick="startBatchReview(${i})">
+          ${b.dueNow?'🔥 지금 복습':'복습 시작'}
+        </button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+// WRONG NOTE
+// ══════════════════════════════════════════
+function renderWrong(){
+  buildBatches();
+  const el=document.getElementById('wrong-content');
+  const total=_wrongProblems.length;
+  if(total===0){
+    el.innerHTML=`
+    <div class="wn-stats">
+      <div class="wn-stat"><div class="wn-stat-n">0</div><div class="wn-stat-l">오답 문제</div></div>
+      <div class="wn-stat"><div class="wn-stat-n">0</div><div class="wn-stat-l">복습 묶음</div></div>
+      <div class="wn-stat"><div class="wn-stat-n">0</div><div class="wn-stat-l">복습 예정</div></div>
+    </div>
+    <div class="wn-empty"><div class="wn-empty-icon">🎉</div><div class="wn-empty-t">오답 문제가 없어요!</div><div class="wn-empty-s">Part 5/6 문제를 풀면 오답이 자동 저장돼요</div></div>`;
+    return;
+  }
+  const due=getDueBatches();
+  el.innerHTML=`
+  <div class="wn-stats">
+    <div class="wn-stat"><div class="wn-stat-n">${total}</div><div class="wn-stat-l">오답 문제</div></div>
+    <div class="wn-stat"><div class="wn-stat-n">${_batches.length}</div><div class="wn-stat-l">총 묶음</div></div>
+    <div class="wn-stat"><div class="wn-stat-n" style="color:var(--accent)">${due.length}</div><div class="wn-stat-l">복습 예정</div></div>
+  </div>
+  ${due.length>0?`<div style="padding:0 16px;margin-bottom:4px"><button style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:13px;font-size:14px;font-weight:700;font-family:var(--font-b);cursor:pointer" onclick="startNextDue()">🔥 지금 당장 복습하기 (${due.reduce((a,b)=>a+b.size,0)}문제)</button></div>`:''}
+  <div class="sec-label">복습 묶음 목록</div>
+  <div class="batch-wrap">
+    ${_batches.map((b,i)=>{
+      const dueLabel=b.allDone?'완료':b.dueNow?'지금 복습':'대기 중';
+      const dueClass=b.allDone?'done':b.dueNow?'now':'later';
+      const doneCount=b.problems.filter(p=>(p.review_count||0)>=1).length;
+      const pct=Math.round((doneCount/b.size)*100);
+      const nextDate=b.problems.filter(p=>p.next_review).map(p=>new Date(p.next_review)).sort((a,c)=>a-c)[0];
+      const nextStr=b.dueNow?'':nextDate?`${nextDate.getMonth()+1}/${nextDate.getDate()} 복습`:'';
+      return `
+      <div class="batch-card">
+        <div class="bc-header">
+          <div class="bc-title">묶음 ${i+1} (${b.size}문제)</div>
+          <div class="bc-due ${dueClass}">${dueLabel}${nextStr?' · '+nextStr:''}</div>
+        </div>
+        <div class="bc-progress"><div class="bc-progress-fill" style="width:${pct}%"></div></div>
+        <div class="bc-count">${doneCount}/${b.size} 복습 완료</div>
+        <div class="bc-preview">
+          ${b.problems.slice(0,6).map(p=>`<span class="bc-tag ${p.review_count>0?'':'wrong-t'}">${(p.question_text||'문제').substring(0,12)}...</span>`).join('')}
+          ${b.size>6?`<span class="bc-tag">+${b.size-6}개</span>`:''}
+        </div>
+        <div class="bc-actions">
+          <button class="bc-btn bc-btn-skip" onclick="toast('아직 복습 시간이 아닙니다')">건너뛰기</button>
+          <button class="bc-btn bc-btn-review" onclick="startBatchReview(${i})">
+            ${b.dueNow?'🔥 지금 복습':'복습 시작'}
+          </button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+// REVIEW SESSION
+// ══════════════════════════════════════════
+function startNextDue(){
+  const due=getDueBatches();
+  if(due.length===0){toast('복습할 묶음이 없습니다');return}
+  startBatchReview(_batches.indexOf(due[0]));
+}
+function openReview(){
+  const due=getDueBatches();
+  if(due.length===0){toast('지금 복습할 묶음이 없어요!');return}
+  startBatchReview(_batches.indexOf(due[0]));
+}
+
+function startBatchReview(batchIdx){
+  const batch=_batches[batchIdx];
+  if(!batch){toast('묶음을 찾을 수 없습니다');return}
+  _rsProblems=[...batch.problems];
+  _rsIdx=0;_rsOk=0;_rsNg=0;_rsBatchId=batchIdx;
+  _similarCache={}; // 새 복습 세션마다 캐시 초기화
+  document.getElementById('rs-batch-label').textContent=`묶음 ${batchIdx+1} 복습`;
+  document.getElementById('rs-complete').classList.remove('active');
+  document.getElementById('rs-body').style.display='flex';
+  document.getElementById('scr-review-session').classList.add('active');
+  renderRsQuestion();
+}
+
+async function renderRsQuestion(){
+  if(_rsIdx>=_rsProblems.length){endReviewSession();return}
+  const p=_rsProblems[_rsIdx];
+  const pct=(_rsIdx/_rsProblems.length)*100;
+  document.getElementById('rs-prog-text').textContent=`${_rsIdx+1} / ${_rsProblems.length}`;
+  document.getElementById('rs-prog-fill').style.width=pct+'%';
+  document.getElementById('rs-ok').textContent=`O:${_rsOk}`;
+  document.getElementById('rs-ng').textContent=`X:${_rsNg}`;
+  document.getElementById('rs-body').scrollTop=0;
+
+  // 2회차 이상이고 Gemini 키 있으면 → 유사문제 생성
+  const reviewCount=p.review_count||0;
+  const useAI=reviewCount>=1&&_geminiKey&&p.type==='p56';
+
+  if(useAI){
+    await renderSimilarQuestion(p);
+  } else {
+    renderOriginalQuestion(p);
+  }
+}
+
+function renderOriginalQuestion(p){
+  const letters=['A','B','C','D'];
+  document.getElementById('rs-qcard').innerHTML=`
+    <div class="rs-q-num">문제 ${_rsIdx+1} · PART ${p.type==='p56'?'5/6':'7'} · <span style="color:var(--text3)">원본 문제</span></div>
+    <div class="rs-q-text">${p.question_text||'문제'}</div>`;
+  document.getElementById('rs-choices').innerHTML=(p.choices||[]).map((ch,i)=>`
+    <button class="p56-choice" onclick="answerRs(${i},false)" id="rs-ch-${i}">
+      <span class="p56-choice-letter">${letters[i]}</span>
+      <span class="p56-choice-text">${ch}</span>
+    </button>`).join('');
+}
+
+async function renderSimilarQuestion(p){
+  const cacheKey=`${p.id}_${p.review_count}`;
+  // 로딩 표시
+  document.getElementById('rs-qcard').innerHTML=`
+    <div class="similar-loading">
+      <div class="similar-badge"><div class="spin" style="width:12px;height:12px;border-width:2px"></div> AI 유사문제 생성 중</div>
+      <div class="similar-loading-txt">같은 문법 유형의<br>새로운 문제를 만들고 있어요</div>
+    </div>`;
+  document.getElementById('rs-choices').innerHTML='';
+
+  // 캐시 확인
+  if(_similarCache[cacheKey]){
+    renderGeneratedQuestion(_similarCache[cacheKey],p);
+    return;
+  }
+
+  try{
+    const analysis=p.analysis||{};
+    const grammarCat=analysis.grammar_category||'문법';
+    const originalQ=p.question_text||'';
+    const originalChoices=(p.choices||[]).join(' / ');
+    const correctChoice=(p.choices||[])[p.correct]||'';
+
+    const prompt=`당신은 토익 전문 출제 위원입니다.
+
+아래 원본 문제와 같은 문법 유형(${grammarCat})의 토익 Part 5 유사 문제를 새로 만드세요.
+
+[원본 문제]
+${originalQ}
+선택지: ${originalChoices}
+정답: ${correctChoice}
+
+규칙:
+1. 원본과 같은 문법 포인트를 테스트하지만 완전히 다른 문장과 어휘 사용
+2. 실제 토익 출제 스타일 (비즈니스/업무 상황)
+3. 오답 선택지도 원본과 다른 단어 사용
+4. 난이도는 원본과 유사하게
+
+반드시 아래 JSON 형식으로만 응답 (다른 텍스트 없이):
+{
+  "question_text": "문장에서 빈칸(_____) 포함한 완전한 문제 문장",
+  "choices": ["(A) 선택지1","(B) 선택지2","(C) 선택지3","(D) 선택지4"],
+  "correct_index": 정답인덱스(0-3),
+  "correct_reason": "정답 이유 한 문장 (한국어)"
+}`;
+
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${_geminiKey}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.7,maxOutputTokens:600}
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const cleaned=text.replace(/```json|```/g,'').trim();
+    const generated=JSON.parse(cleaned);
+    // 캐시 저장
+    _similarCache[cacheKey]=generated;
+    renderGeneratedQuestion(generated,p);
+  }catch(e){
+    console.warn('유사문제 생성 실패, 원본 표시:', e.message);
+    renderOriginalQuestion(p);
+  }
+}
+
+function renderGeneratedQuestion(generated,originalProb){
+  const letters=['A','B','C','D'];
+  const reviewNum=originalProb.review_count||0;
+  document.getElementById('rs-qcard').innerHTML=`
+    <div class="rs-q-num">문제 ${_rsIdx+1} · PART 5/6
+      <span class="similar-badge" style="margin-left:6px;font-size:9px;padding:2px 8px">✨ AI 유사문제 (${reviewNum}회차)</span>
+    </div>
+    <div class="rs-q-text" style="margin-top:6px">${generated.question_text}</div>`;
+  // 정답 인덱스를 원본 prob에 임시 저장 (answerRs에서 사용)
+  _rsProblems[_rsIdx]._similarCorrect=generated.correct_index;
+  _rsProblems[_rsIdx]._similarChoices=generated.choices;
+  _rsProblems[_rsIdx]._similarReason=generated.correct_reason;
+  _rsProblems[_rsIdx]._isSimilar=true;
+  document.getElementById('rs-choices').innerHTML=generated.choices.map((ch,i)=>`
+    <button class="p56-choice" onclick="answerRs(${i},true)" id="rs-ch-${i}">
+      <span class="p56-choice-letter">${letters[i]}</span>
+      <span class="p56-choice-text">${ch}</span>
+    </button>`).join('');
+}
+
+async function answerRs(idx, isSimilar=false){
+  const p=_rsProblems[_rsIdx];
+  const letters=['A','B','C','D'];
+  // 유사문제면 _similarCorrect, 원본이면 p.correct 사용
+  const correctIdx=isSimilar?(p._similarCorrect??p.correct):p.correct;
+  const choices=isSimilar?(p._similarChoices||p.choices):p.choices;
+  const correct=idx===correctIdx;
+
+  document.querySelectorAll('#rs-choices .p56-choice').forEach((c,i)=>{
+    c.disabled=true;
+    if(i===correctIdx)c.classList.add('correct');
+    else if(i===idx&&!correct)c.classList.add('wrong');
+  });
+  if(correct)_rsOk++;else _rsNg++;
+  await updateReviewDate(p.id,correct);
+
+  // 해설 표시
+  const expEl=document.createElement('div');
+  expEl.style.cssText='margin-top:10px;padding:14px 16px;background:var(--bg2);border-radius:12px;font-size:13px;color:var(--text2);line-height:1.7';
+
+  if(isSimilar){
+    // 유사문제 해설
+    const reason=p._similarReason||'';
+    expEl.innerHTML=`
+      <div style="font-weight:700;color:${correct?'var(--correct)':'var(--wrong)'};margin-bottom:6px">${correct?'✅ 정답!':'❌ 오답'}</div>
+      <div>정답: <b>(${letters[correctIdx]}) ${choices[correctIdx]}</b></div>
+      ${reason?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">${reason}</div>`:''}
+      ${!correct?`<div style="margin-top:8px;padding:8px 10px;background:rgba(220,38,38,.07);border-radius:8px;font-size:12px;color:var(--wrong)">
+        ⚠️ 같은 유형에서 또 틀렸어요 — 약점 유형으로 기록됩니다
+      </div>`:''}`;
+  } else {
+    // 원본 문제 해설
+    let analysis=p.analysis;
+    if(typeof analysis==='string'){try{analysis=JSON.parse(analysis)}catch(e){analysis={}}}
+    const reason=(analysis&&analysis.correct_reason)||'';
+    expEl.innerHTML=`
+      <div style="font-weight:700;color:${correct?'var(--correct)':'var(--wrong)'};margin-bottom:6px">${correct?'✅ 정답!':'❌ 오답'}</div>
+      <div>정답: <b>(${letters[correctIdx]}) ${choices[correctIdx]}</b></div>
+      ${reason?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">${reason}</div>`:''}`;
+  }
+  document.getElementById('rs-qcard').appendChild(expEl);
+  setTimeout(()=>{_rsIdx++;renderRsQuestion();},2000);
+}
+
+function endReviewSession(){
+  const total=_rsProblems.length;
+  const pct=Math.round((_rsOk/total)*100);
+  document.getElementById('rs-body').style.display='none';
+  document.getElementById('rs-complete').classList.add('active');
+  document.getElementById('rsc-score').textContent=`${_rsOk}/${total} (${pct}%)`;
+  document.getElementById('rsc-sub').textContent=pct>=80?'훌륭해요! 완전히 마스터 중!':pct>=50?'잘하고 있어요! 계속 복습하세요':'다시 한번 집중해서 복습해보세요';
+  document.getElementById('rsc-emoji').textContent=pct>=80?'🏆':pct>=50?'💪':'📖';
+  buildBatches();renderWrong();renderHome();
+}
+function retryReview(){
+  _rsIdx=0;_rsOk=0;_rsNg=0;
+  _rsProblems=[..._rsProblems];
+  _similarCache={}; // 다시풀기 시 새 유사문제 생성
+  document.getElementById('rs-complete').classList.remove('active');
+  document.getElementById('rs-body').style.display='flex';
+  renderRsQuestion();
+}
+function closeReviewSession(){
+  document.getElementById('scr-review-session').classList.remove('active');
+  buildBatches();renderWrong();renderHome();
+}
+
+// ══════════════════════════════════════════
+// PROFILE
+// ══════════════════════════════════════════
+function renderProfile(){
+  const name=_profile?.name||'학습자';
+  const email=_user?.email||'';
+  document.getElementById('prof-content').innerHTML=`
+  <div class="prof-hero">
+    <div class="prof-av">👤</div>
+    <div class="prof-name">${name}</div>
+    <div class="prof-email">${email}</div>
+  </div>
+  <div class="menu-list" style="margin-top:14px">
+    <div class="mi" onclick="showGeminiSetting()">
+      <div class="mi-ic">🔑</div>
+      <div style="flex:1">
+        <div class="mi-t">Gemini API 키 설정</div>
+        <div class="mi-s">${_geminiKey?'✓ 설정됨 (AI 기능 활성화)':'미설정 — AI 기능 비활성화'}</div>
+      </div>
+      <div class="mi-arr">›</div>
+    </div>
+    <div class="mi" onclick="toggleDark()">
+      <div class="mi-ic">🌙</div>
+      <div style="flex:1"><div class="mi-t">다크모드 전환</div></div>
+      <div class="mi-arr">›</div>
+    </div>
+    <div class="mi" onclick="if(confirm('로그아웃?'))signOut()">
+      <div class="mi-ic">🚪</div>
+      <div style="flex:1"><div class="mi-t">로그아웃</div><div class="mi-s">${email}</div></div>
+      <div class="mi-arr">›</div>
+    </div>
+  </div>`;
+}
+
+function showGeminiSetting(){
+  const key=prompt('Gemini API 키를 입력하세요:\n(https://aistudio.google.com/app/apikey 에서 발급)',_geminiKey||'');
+  if(key===null)return;
+  _geminiKey=key.trim();
+  localStorage.setItem('it.gemini',_geminiKey);
+  // Save to profile
+  _sb.auth.updateUser({data:{..._profile,gemini_key:_geminiKey}});
+  toast(_geminiKey?'API 키가 저장되었습니다 ✓':'API 키가 제거되었습니다');
+  renderProfile();
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+async function init(){
+  initDark();
+  _geminiKey=localStorage.getItem('it.gemini')||'';
+
+  // ── 테스트 모드: 로그인 없이 바로 앱 진입 ──
+  const TEST_MODE = true;
+  if(TEST_MODE){
+    _user={ id:'test-user-001', email:'test@into.com' };
+    _profile={ name:'테스트' };
+    // ⚠️ 키를 코드에 직접 넣으면 GitHub 올릴 때 Google이 자동 비활성화함
+    // → 마이페이지에서 직접 입력하거나, 로컬 테스트만 할 경우 아래 주석 해제
+    // if(!_geminiKey){ _geminiKey='여기에키입력'; localStorage.setItem('it.gemini',_geminiKey); }
+    showApp();
+    setTimeout(()=>document.getElementById('loading').classList.add('out'),500);
+    return;
+  }
+
+  document.getElementById('scr-login').classList.add('active');
+  const{data:{session}}=await _sb.auth.getSession();
+  if(session?.user)await onSignIn(session.user);
+  setTimeout(()=>document.getElementById('loading').classList.add('out'),700);
+}
+_sb.auth.onAuthStateChange((ev,sess)=>{if(ev==='SIGNED_OUT'&&!true)signOut()});
+init();
+</script>
+</body>
+</html>
